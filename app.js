@@ -7,15 +7,15 @@ const port = 3000; // Choose your desired port
 const fetch = require('node-fetch');
    const FormData = require('form-data');
 // Initialize OpenAI
-const openai = new OpenAI();
 
-app.get('/getFile/:fileid', async (req, res) => {
+
+app.get('/getFile/:fileid/:apikey', async (req, res) => {
     try {
       const fileid = req.params.fileid;
       let base64Data=""
       
       const myHeaders = {
-        "Authorization": "Bearer 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",
+        "Authorization": "Bearer "+req.params.apikey,
         "Cookie": "__cf_bm=GYtgnC2MdmLpmBkjfPtHpaddbOL.IunVXAwpSPfa3mA-1708356337-1.0-AWYdlAcDf1SGoGgeF0IQ7gm77Jd+9qLYtNTM+L6xRP67ALcN7oSyfFx/SZwidVuE2xg3CcfFOGQMAp69QmCod/I=; _cfuvid=Knsf9PgrNn3dGtd56LPZtrjda2lDxBa4aueoilWTUmc-1708356337426-0.0-604800000"
       };
       
