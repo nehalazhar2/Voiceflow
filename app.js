@@ -1,87 +1,50 @@
 const express = require('express');
-const OpenAI = require('openai');
-const fs = require('fs');
 const axios = require('axios');
+const FormData = require('form-data');
 const app = express();
-const port = 3000; // Choose your desired port
-const fetch = require('node-fetch');
-   const FormData = require('form-data');
-// Initialize OpenAI
+const port = 3000;
+const cors = require('cors');
 
-var cors = require('cors');
+app.use(express.json());
+app.use(cors({ credentials: true, origin: true }));
+app.options('*', cors());
 
-app.use(
-    cors({
-        credentials: true,
-        origin: true
-    })
-);
-app.get('/getFile/:fileid/:apikey', async (req, res) => {
+app.post('/getFile', async (req, res) => {
     try {
-      const fileid = req.params.fileid;
-      let base64Data=""
-      
-      const myHeaders = {
-        "Authorization": "Bearer "+req.params.apikey,
-        "Cookie": "__cf_bm=GYtgnC2MdmLpmBkjfPtHpaddbOL.IunVXAwpSPfa3mA-1708356337-1.0-AWYdlAcDf1SGoGgeF0IQ7gm77Jd+9qLYtNTM+L6xRP67ALcN7oSyfFx/SZwidVuE2xg3CcfFOGQMAp69QmCod/I=; _cfuvid=Knsf9PgrNn3dGtd56LPZtrjda2lDxBa4aueoilWTUmc-1708356337426-0.0-604800000"
-      };
-      
-      const requestOptions = {
-        method: "GET",
-        headers: myHeaders,
-        redirect: "follow"
-      };
-      
-      fetch("https://api.openai.com/v1/files/"+fileid+"/content", requestOptions)
-        .then((response) => response.buffer())
-        .then((result) => {
-          // Convert the received buffer to base64
-           base64Data = result.toString('base64');
+        console.log(req.body);
+        const fileid = req.body.fileid;
 
-      
-       
-let data = new FormData();
-data.append('key', 'a33e1e04a4f3febcb4277c2cc118f5e3');
-data.append('image', base64Data);
+        // Fetch file content from OpenAI
+        const responseOpenAI = await axios.get(`https://api.openai.com/v1/files/${fileid}/content`, {
+            headers: {
+                Authorization: `Bearer ${req.body.apikey}`
+            },
+            responseType: 'arraybuffer' // Ensure response type is arraybuffer
+        });
 
-let config = {
-  method: 'post',
-  maxBodyLength: Infinity,
-  url: 'https://api.imgbb.com/1/upload',
-  headers: { 
-    ...data.getHeaders()
-  },
-  data : data
-};
+        // Convert the received buffer to base64
+        const base64Data = Buffer.from(responseOpenAI.data, 'binary').toString('base64');
 
-axios.request(config)
-.then((response) => {
- res.send(response.data);
-})
-.catch((error) => {
-  console.log(error);
-});
-        })
-        .catch((error) => console.error(error));
-      
+        // Prepare form data for ImgBB upload
+        const formData = new FormData();
+        formData.append('key', 'a33e1e04a4f3febcb4277c2cc118f5e3');
+        formData.append('image', base64Data);
 
+        // Upload the file to ImgBB using Axios
+        const responseImgBB = await axios.post('https://api.imgbb.com/1/upload', formData, {
+            headers: formData.getHeaders(),
+            maxContentLength: Infinity,
+            maxBodyLength: Infinity
+        });
 
-
-
-    //   Upload the file to imgBB
-
-      
-    
-  
+        // Send the response back to the client
+        res.send(responseImgBB.data);
     } catch (error) {
-      console.error('Error:', error);
-      res.status(500).send('Internal Server Error');
+        console.error('Error:', error);
+        res.status(500).send('Internal Server Error');
     }
-  });
+});
 
-// app.listen(port, () => {
-//   console.log(`Server is running on port ${port}`);
-// });
-app.listen(process.env.PORT || 3000, function(){
-  console.log("Express server listening on port %d in %s mode", this.address().port, app.settings.env);
+app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
 });
