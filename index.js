@@ -8,16 +8,15 @@ const cors = require('cors');
 app.use(express.json());
 app.use(cors({ credentials: true, origin: true }));
 app.options('*', cors());
-
-app.post('/getFile', async (req, res) => {
+app.get('/getFile/:fileid/:apikey', async (req, res) => {
     try {
-        console.log(req.body);
-        const fileid = req.body.fileid;
+        // console.log(req.body);
+        const fileid = req.params.fileid;
 
         // Fetch file content from OpenAI
         const responseOpenAI = await axios.get(`https://api.openai.com/v1/files/${fileid}/content`, {
             headers: {
-                Authorization: `Bearer ${req.body.apikey}`
+                Authorization: `Bearer ${req.params.apikey}`
             },
             responseType: 'arraybuffer' // Ensure response type is arraybuffer
         });
