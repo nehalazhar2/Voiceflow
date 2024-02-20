@@ -2,7 +2,7 @@ const express = require('express');
 const axios = require('axios');
 const FormData = require('form-data');
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 const cors = require('cors');
 
 app.use(express.json());
